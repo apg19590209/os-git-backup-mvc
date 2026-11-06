@@ -1,3 +1,20 @@
+<style>
+    /*
+     * validation emphasis. handleFormValidation() puts has-error on the control element itself and
+     * writes the message into the sibling span.help-block, so the emphasis has to be scoped to the
+     * row and the control, not to descendants of has-error.
+     */
+    #frm_git .has-error {
+        border-color: #d9534f !important;
+        box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 6px rgba(217, 83, 79, .6) !important;
+    }
+
+    #frm_git tr:has(.has-error) .control-label,
+    #frm_git tr:has(.has-error) .help-block {
+        color: #d9534f !important;
+        font-weight: bold;
+    }
+</style>
 {{ partial('layout_partials/base_apply_button', {'data_endpoint': '/api/gitbackup/settings/reconfigure', 'button_id': 'btn_apply', 'data_label': 'Apply Changes'}) }}
 <form id="frm_git" class="form-inline">
 

@@ -59,8 +59,8 @@ class GitSettings extends BaseModel
          */
         if ((string)$this->enabled === '1' && (string)$this->dest_type === 'remote') {
             $required = [
-                'url' => gettext('A remote repository URL is required when upstream push is enabled.'),
-                'user' => gettext('A username or access token identifier is required for remote push.'),
+                'url' => gettext('Required field.'),
+                'user' => gettext('Required field.'),
             ];
             foreach ($required as $field => $message) {
                 if (trim((string)$this->getNodeByReference($field)) !== '') {
