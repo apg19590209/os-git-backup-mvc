@@ -40,50 +40,9 @@
         {{ lang._("Force Push overwrites and erases the history of the upstream branch with the local state. Use with extreme caution.") }}
     </div>
 
-<style>
-    /* self-contained corner toast: this OPNsense build ships no growl/toast plugin */
-    #git_save_toast_stack {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 9999;
-        /* explicit structural width: the card must not collapse horizontally */
-        width: 320px;
-    }
-
-    #git_save_toast_stack .git-custom-toast {
-        margin-bottom: 10px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        border-left: 5px solid #28a745;
-        display: none;
-    }
-</style>
-<div id="git_save_toast_stack" aria-live="polite"></div>
-
 <script>
     $(document).ready(function () {
         var dataKey = '/api/gitbackup/settings';
-
-        /* minimal floating confirmation, replaces the modal dialog used earlier */
-        function showSaveToast(message) {
-            /* a new card replaces any older row, so repeated saves can never stack */
-            $('#git_save_toast_stack').empty();
-
-            /* the shell is complete before the card is mounted, and the text is set on the
-               detached node so the card can never fade in empty or lose its payload */
-            var toast = $('<div class="alert alert-success git-custom-toast" role="status">' +
-                            '<strong><i class="fa fa-check-circle"></i></strong> ' +
-                            '<span></span>' +
-                            '</div>');
-            toast.find('span').text(message);
-            toast.appendTo('#git_save_toast_stack');
-            toast.fadeIn(200);
-            window.setTimeout(function () {
-                toast.fadeOut(300, function () {
-                    $(this).remove();
-                });
-            }, 3000);
-        }
 
         function formatLayoutTransitions(duration) {
             var enabled = $('#git\\.enabled').is(':checked');
@@ -149,10 +108,16 @@
             progress.addClass('fa fa-spinner fa-spin');
 
             saveFormToEndpoint(dataKey + '/set', 'frm_git', function () {
-                /* re-sync first, then raise the floating confirmation */
+                /* re-sync first, then hand the confirmation to the native framework dialog */
                 mapDataToFormUI({'frm_git': dataKey + '/get'}).done(function () {
                     formatLayoutTransitions(0);
-                    showSaveToast('{{ lang._("Changes Applied Successfully!") }}');
+                    stdDialogInform(
+                        '{{ lang._("Git Backup") }}',
+                        '{{ lang._("Changes Applied Successfully!") }}',
+                        '{{ lang._("OK") }}',
+                        undefined,
+                        'success'
+                    );
                 }).always(function () {
                     /*
                      * the lock is released only once the whole save track is finished, and
