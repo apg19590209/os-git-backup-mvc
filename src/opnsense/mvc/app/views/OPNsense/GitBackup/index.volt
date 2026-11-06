@@ -44,20 +44,18 @@
     /* self-contained corner toast: this OPNsense build ships no growl/toast plugin */
     #git_save_toast_stack {
         position: fixed;
-        top: 15px;
-        right: 15px;
-        z-index: 2000;
-        max-width: 360px;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        pointer-events: none;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        /* explicit structural width: the card must not collapse horizontally */
+        width: 320px;
     }
 
-    #git_save_toast_stack .git-save-toast {
-        margin: 0;
-        pointer-events: auto;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    #git_save_toast_stack .git-custom-toast {
+        margin-bottom: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        border-left: 5px solid #28a745;
+        display: none;
     }
 </style>
 <div id="git_save_toast_stack" aria-live="polite"></div>
@@ -68,10 +66,14 @@
 
         /* minimal floating confirmation, replaces the modal dialog used earlier */
         function showSaveToast(message) {
-            var toast = $('<div class="alert alert-success git-save-toast" role="status"></div>');
-            toast.append($('<i class="fa fa-check"></i> '));
+            /* the card is built and mounted first, then slid into view fully formed;
+               the message is inserted as text so a translation can never inject markup */
+            var toast = $('<div class="alert alert-success git-custom-toast" role="status"></div>');
+            toast.append($('<strong></strong>').append($('<i class="fa fa-check-circle"></i>')));
+            toast.append(document.createTextNode(' '));
             toast.append($('<span></span>').text(message));
-            $('#git_save_toast_stack').append(toast);
+            toast.appendTo('#git_save_toast_stack');
+            toast.fadeIn(300);
             window.setTimeout(function () {
                 toast.fadeOut(300, function () {
                     toast.remove();
@@ -132,9 +134,15 @@
                 /* re-sync first, then raise the floating confirmation */
                 mapDataToFormUI({'frm_git': dataKey + '/get'}).done(function () {
                     formatLayoutTransitions(0);
+                    showSaveToast('{{ lang._("Changes Applied Successfully!") }}');
+                }).always(function () {
+                    /*
+                     * the lock is released only once the whole save track is finished, and
+                     * released on failure too, so a dropped re-sync can never leave the button
+                     * permanently disabled
+                     */
                     progress.removeClass('fa-spinner fa-spin');
                     button.prop('disabled', false);
-                    showSaveToast('{{ lang._("Changes Applied Successfully!") }}');
                 });
             }, false, function () {
                 /* validation rejected the payload: fields are marked, button must stay usable */
