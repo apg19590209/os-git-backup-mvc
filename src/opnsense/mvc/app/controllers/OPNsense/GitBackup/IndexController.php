@@ -35,11 +35,42 @@ namespace OPNsense\GitBackup;
 class IndexController extends \OPNsense\Base\IndexController
 {
     /**
+     * fields rendered inside the always visible core panel, everything else goes into the
+     * collapsible remote drawer
+     */
+    private const CORE_FIELDS = ['git.enabled', 'git.dest_type'];
+
+    /**
+     * flatten the parsed form definition into a plain field list
+     * @param array $form parsed form definition (see ControllerBase::getForm)
+     * @param array|null $keep field ids to select, null selects everything
+     * @return array
+     */
+    private function collectFields($form, $keep = null)
+    {
+        $result = [];
+        foreach ($form['sections'] as $section) {
+            foreach ($section['children'] as $field) {
+                if ($keep === null || in_array($field['id'], $keep, true)) {
+                    $result[] = $field;
+                }
+            }
+        }
+        return $result;
+    }
+
+    /**
      * git backup settings page, works on the existing //system/backup/git mount
      */
     public function indexAction()
     {
-        $this->view->formSettings = $this->getForm('settings');
+        $form = $this->getForm('settings');
+        $all = [];
+        foreach ($this->collectFields($form) as $field) {
+            $all[] = $field['id'];
+        }
+        $this->view->formCoreFields = $this->collectFields($form, self::CORE_FIELDS);
+        $this->view->formRemoteFields = $this->collectFields($form, array_diff($all, self::CORE_FIELDS));
         $this->view->pick('OPNsense/GitBackup/index');
     }
 }

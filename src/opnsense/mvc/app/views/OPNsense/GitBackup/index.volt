@@ -1,56 +1,108 @@
+<form id="frm_git" class="form-inline">
+
+    <!-- always visible core options -->
+    <div class="content-box" style="padding-bottom: 15px;">
+        <table class="table table-striped opnsense_standard_table_form">
+            <tbody>
+{% for field in formCoreFields %}
+                {{ partial("layout_partials/form_input_tr", field) }}
+{% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- collapsible upstream drawer, revealed for remote mode only -->
+    <div class="content-box" id="panel_remote_options" style="margin-top: 20px; padding-bottom: 15px; display: none;">
+        <h4 style="padding-left: 15px;"><i class="fa fa-cloud-upload"></i> {{ lang._("Advanced Upstream Remote Options") }}</h4>
+        <hr/>
+        <table class="table table-striped opnsense_standard_table_form">
+            <tbody>
+{% for field in formRemoteFields %}
+                {{ partial("layout_partials/form_input_tr", field) }}
+{% endfor %}
+                <tr>
+                    <td style="width: 22%"><strong>{{ lang._("Connectivity Validation") }}</strong></td>
+                    <td style="width: 78%">
+                        <button class="btn btn-default" id="btn_test" type="button">
+                            <i class="fa fa-refresh" id="test_progress"></i> <b>{{ lang._("Test Connection") }}</b>
+                        </button>
+                        <div id="inline_test_result" class="alert" style="display: none; margin-top: 10px; padding: 10px; border-radius: 3px;"></div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</form>
+
+<div class="col-md-12" style="margin-top: 20px; padding-left: 0;">
+    <div id="git_force_warning" class="alert alert-danger" style="display: none;">
+        <strong><i class="fa fa-exclamation-triangle"></i> {{ lang._("WARNING: Destructive Action") }}</strong><br>
+        {{ lang._("Force Push overwrites and erases the history of the upstream branch with the local state. Use with extreme caution.") }}
+    </div>
+
 <script>
     $(document).ready(function () {
-        var apiBase = '/api/gitbackup/settings';
+        var dataKey = '/api/gitbackup/settings';
 
-        function gitLayout() {
+        function formatLayoutTransitions(duration) {
             var enabled = $('#git\\.enabled').is(':checked');
             var remote = $('#git\\.dest_type').val() === 'remote';
-            var forcePush = $('#git\\.force_push').is(':checked');
-            var remoteFields = $('#git\\.url, #git\\.branch, #git\\.force_push, #git\\.user, #git\\.password, #git\\.privkey');
-
-            $('#git\\.dest_type').prop('disabled', !enabled);
-            $('#btn_test').prop('disabled', !enabled || !remote);
-
-            /* disabling is safe here: the API only stores the keys it actually receives */
-            remoteFields.prop('disabled', !enabled || !remote);
-            remoteFields.closest('tr').css('opacity', (!enabled || !remote) ? '0.5' : '1');
-            $('#git\\.dest_type').closest('tr').css('opacity', enabled ? '1' : '0.5');
+            var destTypeRow = $('#git\\.dest_type').closest('tr');
+            var remotePanel = $('#panel_remote_options');
+            var forceWarning = $('#git_force_warning');
 
             if (!enabled) {
-                $('#btn_save').html('<b><i class="fa fa-floppy-o"></i> {{ lang._("Save Settings") }}</b>');
-            } else if (!remote) {
-                $('#btn_save').html('<b><i class="fa fa-floppy-o"></i> {{ lang._("Save Local Configuration") }}</b>');
+                /* level 1: provider off, everything except the master switch disappears */
+                destTypeRow.slideUp(duration);
+                remotePanel.slideUp(duration);
+                forceWarning.fadeOut(duration);
+                $('#btn_save').html('<b><i class="fa fa-floppy-o"></i> {{ lang._("Save Disablement Settings") }}</b>');
             } else {
-                $('#btn_save').html('<b><i class="fa fa-floppy-o"></i> {{ lang._("Save Remote Configuration") }}</b>');
-            }
-
-            if (enabled && remote && forcePush) {
-                $('#git_force_warning').stop(true, true).fadeIn(200);
-            } else {
-                $('#git_force_warning').stop(true, true).fadeOut(200);
+                destTypeRow.slideDown(duration);
+                if (!remote) {
+                    /* level 2a: local history only */
+                    remotePanel.slideUp(duration);
+                    forceWarning.fadeOut(duration);
+                    $('#btn_save').html('<b><i class="fa fa-floppy-o"></i> {{ lang._("Save Local Configuration") }}</b>');
+                } else {
+                    /* level 2b: local repository plus upstream push */
+                    remotePanel.slideDown(duration);
+                    $('#btn_save').html('<b><i class="fa fa-floppy-o"></i> {{ lang._("Save Remote Configuration") }}</b>');
+                    if ($('#git\\.force_push').is(':checked')) {
+                        forceWarning.stop(true, true).fadeIn(duration);
+                    } else {
+                        forceWarning.fadeOut(duration);
+                    }
+                }
             }
         }
 
-        mapDataToFormUI({'frm_git': apiBase + '/get'}).done(function () {
-            gitLayout();
+        mapDataToFormUI({'frm_git': dataKey + '/get'}).done(function () {
+            formatLayoutTransitions(0);
         });
 
-        $(document).on('change', '#git\\.enabled, #git\\.dest_type, #git\\.force_push', gitLayout);
+        $(document).on('change', '#git\\.enabled, #git\\.dest_type, #git\\.force_push', function () {
+            formatLayoutTransitions(200);
+        });
 
         $('#btn_save').click(function () {
-            saveFormToEndpoint(apiBase + '/set', 'frm_git', function () {
-                mapDataToFormUI({'frm_git': apiBase + '/get'}).done(gitLayout);
+            saveFormToEndpoint(dataKey + '/set', 'frm_git', function () {
+                mapDataToFormUI({'frm_git': dataKey + '/get'}).done(function () {
+                    formatLayoutTransitions(0);
+                });
             });
         });
 
         $('#btn_test').click(function () {
             var button = $(this);
-            var result = $('#git_test_result');
+            var result = $('#inline_test_result');
+            var progress = $('#test_progress');
+
             button.prop('disabled', true);
-            $('#test_progress').addClass('fa-spinner fa-spin');
+            progress.addClass('fa-spin');
             result.hide().removeClass('alert alert-success alert-danger').empty();
 
-            $.post(apiBase + '/test_connection', getFormData('frm_git'), function (data) {
+            $.post(dataKey + '/test_connection', getFormData('frm_git'), function (data) {
                 var message = (data && data.message) ? data.message : '{{ lang._("unknown error") }}';
                 /* remote output is untrusted, insert it as text only */
                 var safe = $('<div/>').text(message).html();
@@ -70,7 +122,7 @@
                     '{{ lang._("the request could not be completed.") }}'
                 ).fadeIn();
             }).always(function () {
-                $('#test_progress').removeClass('fa-spinner fa-spin');
+                progress.removeClass('fa-spin');
                 button.prop('disabled', !$('#git\\.enabled').is(':checked') ||
                                         $('#git\\.dest_type').val() !== 'remote');
             });
@@ -78,18 +130,7 @@
     });
 </script>
 
-{{ partial("layout_partials/base_form", ['fields': formSettings, 'id': 'frm_git']) }}
-
-<div class="col-md-12">
-    <div id="git_force_warning" class="alert alert-danger" style="display: none;">
-        <strong><i class="fa fa-exclamation-triangle"></i> {{ lang._("WARNING: Destructive Action") }}</strong><br>
-        {{ lang._("Force Push overwrites and erases the history of the upstream branch with the local state. Use with extreme caution.") }}
-    </div>
-    <div id="git_test_result" style="display: none; padding: 8px; border-radius: 3px;"></div>
     <button class="btn btn-primary" id="btn_save" type="button">
-        <b>{{ lang._("Save Configuration") }}</b>
-    </button>
-    <button class="btn btn-default" id="btn_test" type="button">
-        <b>{{ lang._("Test Connection") }}</b> <i id="test_progress" class="fa"></i>
+        <b><i class="fa fa-floppy-o"></i> {{ lang._("Save Settings") }}</b> <i id="save_progress" class="fa"></i>
     </button>
 </div>
