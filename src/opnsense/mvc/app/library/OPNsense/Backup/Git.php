@@ -55,6 +55,11 @@ class Git extends Base implements IBackupProvider
          * Backup). The legacy backups page renders one label cell and one input cell per field and has
          * no "header" row type, so the notice closes the label cell and emits its own full-width row.
          * The trailing hidden row absorbs the empty input cell the renderer still produces here.
+         * The scoped style block then hides the two artefacts the legacy renderer emits
+         * unconditionally: the muted info icon abandoned in the closed label cell and the
+         * "Setup/Test Git" submit button row. Both selectors stay scoped to this provider, so no
+         * other form control (save/download/restore) is affected, and a browser without :has()
+         * simply falls back to the current rendering.
          */
         $notice = gettext(
             '<strong><i class="fa fa-info-circle"></i> Interface Migration Notice:</strong> ' .
@@ -62,7 +67,13 @@ class Git extends Base implements IBackupProvider
             'dedicated <b><a href="/ui/gitbackup">System &rarr; Configuration &rarr; Git Backup</a></b> ' .
             'sidebar menu to manage your local or remote repository settings.'
         );
-        $banner = '</td></tr><tr><td colspan="2"><div class="alert alert-info" style="margin-bottom: 0;">' .
+        $banner = '<span class="git-mvc-notice-anchor"></span>' .
+                  '<style>' .
+                  'td:has(> .git-mvc-notice-anchor) > i.fa-info-circle { display: none; }' .
+                  'button[name="setup_Git"] { display: none; }' .
+                  'tr:has(> td > button[name="setup_Git"]) { display: none; }' .
+                  '</style>' .
+                  '</td></tr><tr><td colspan="2"><div class="alert alert-info" style="margin-bottom: 0;">' .
                   $notice .
                   '</div></td></tr><tr style="display: none;">';
         return [
