@@ -46,7 +46,22 @@
         var dataKey = '/api/gitbackup/settings';
 
         /* core action button: Apply bar bound to the plugin reconfigure endpoint */
-        $('#btn_apply').SimpleActionButton();
+        $('#btn_apply').SimpleActionButton({
+            onAction: function (data, status) {
+                if (status === 'success' && data && data.status === 'ok') {
+                    /* collapse the whole alert row once the apply succeeded */
+                    $('#btn_apply').closest('.alert').slideUp(300);
+                }
+            }
+        });
+
+        /*
+         * the collapsed bar stays hidden otherwise, so the next save would have nowhere to apply;
+         * bring it back when the core dirty-state event fires again
+         */
+        $(document).on('settings-changed', function () {
+            $('#btn_apply').closest('.alert').stop(true, true).slideDown(0);
+        });
 
         function formatLayoutTransitions(duration) {
             var enabled = $('#git\\.enabled').is(':checked');
