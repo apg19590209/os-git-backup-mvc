@@ -20,7 +20,9 @@ When integrating this source payload into an active clone of the official `opnse
    - The view layout maps via standard Volt helpers, routing asynchronous requests through the canonical snake_case API controller mapping (`/test_connection`).
 
 ## Upstream Integration & Compilation Notes
-To build this project into a standard installable `.pkg` package via the FreeBSD ports infrastructure later:
-1. Nest this entire repository structure straight into an official `opnsense/plugins` checkout at `sysutils/os-git-backup/`.
-2. This project is structurally designed to **completely replace and upgrade** the legacy plugin. Ensure the root `Makefile` sets `PLUGIN_NAME=os-git-backup` and bumps `PLUGIN_VERSION=1.2` to cleanly overwrite the installed `1.1_5` dependency tree safely.
-3. Complete the `pkg-plist` manifest by appending repo-relative deployment file tracking entries (omitting the `src/` prefix) to satisfy the standard build layout validation constraints.
+Verified against a shallow clone of `opnsense/plugins` and its `Mk/plugins.mk`:
+
+1. Stage this repository into `sysutils/git-backup/` — the directory carries the *source* name. The package name `os-git-backup` is produced by `PLUGIN_PREFIX` (`os-`), so `PLUGIN_NAME` must stay `git-backup`; setting it to `os-git-backup` yields `os-os-git-backup` plus a second, wrong `opnsense/version/os-git-backup` descriptor.
+2. `PLUGIN_VERSION` is `1.2`, and the plugin declares `PLUGIN_DEPENDS=git` and `PLUGIN_TIER=2`, matching the upstream plugin it replaces.
+3. **Do not ship `pkg-plist` or `opnsense/version/git-backup`.** `make plist` derives the manifest from `src/` (absolute `/usr/local/...` entries) and `make install` writes the version descriptor from the `PLUGIN_*` values. A committed plist is ignored by the framework, and a committed version descriptor duplicates the plist entry and freezes a stale `product_hash`.
+4. `make package` in a development clone produces `os-git-backup-devel-1.2.pkg` (`Mk/devel.mk` forces development mode on the development branch) with `product_id: os-git-backup-devel` and `product_conflicts: os-git-backup`; the same tree on a release branch yields `os-git-backup-1.2`.

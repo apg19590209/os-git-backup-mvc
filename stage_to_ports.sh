@@ -4,10 +4,12 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
-TARGET_DIR="$1/sysutils/os-git-backup"
+# the plugin directory is named after the source package, the os- prefix is added by Mk/plugins.mk
+TARGET_DIR="$1/sysutils/git-backup"
 echo "Staging modern MVC Git Backup files into ports tree track: $TARGET_DIR"
 
 mkdir -p "$TARGET_DIR"
 # copy the directory itself, not its contents: a plugin needs <plugin>/src/opnsense/...
 cp -R src "$TARGET_DIR/"
-echo "Assets successfully integrated. Please remember to update version numbers in Makefile and complete pkg-plist before executing a build."
+cp -p Makefile pkg-descr "$TARGET_DIR/"
+echo "Assets successfully integrated. Review PLUGIN_VERSION in the Makefile, then run 'make package' inside $TARGET_DIR."
