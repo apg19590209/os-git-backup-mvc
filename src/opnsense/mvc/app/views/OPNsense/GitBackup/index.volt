@@ -62,6 +62,14 @@
     $(document).ready(function () {
         var dataKey = '/api/gitbackup/settings';
 
+        /*
+         * initial visibility: the partial already renders #change_message_base_form hidden, but the
+         * surrounding alert row (with the Apply button) is visible until the form is dirty, so the
+         * whole bar is hidden here and re-shown by the settings-changed handler below
+         */
+        $('#change_message_base_form').hide();
+        $('#btn_apply').closest('.alert').hide();
+
         /* core action button: Apply bar bound to the plugin reconfigure endpoint */
         $('#btn_apply').SimpleActionButton({
             onAction: function (data, status) {
