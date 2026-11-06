@@ -40,9 +40,44 @@
         {{ lang._("Force Push overwrites and erases the history of the upstream branch with the local state. Use with extreme caution.") }}
     </div>
 
+<style>
+    /* self-contained corner toast: this OPNsense build ships no growl/toast plugin */
+    #git_save_toast_stack {
+        position: fixed;
+        top: 15px;
+        right: 15px;
+        z-index: 2000;
+        max-width: 360px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        pointer-events: none;
+    }
+
+    #git_save_toast_stack .git-save-toast {
+        margin: 0;
+        pointer-events: auto;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    }
+</style>
+<div id="git_save_toast_stack" aria-live="polite"></div>
+
 <script>
     $(document).ready(function () {
         var dataKey = '/api/gitbackup/settings';
+
+        /* minimal floating confirmation, replaces the modal dialog used earlier */
+        function showSaveToast(message) {
+            var toast = $('<div class="alert alert-success git-save-toast" role="status"></div>');
+            toast.append($('<i class="fa fa-check"></i> '));
+            toast.append($('<span></span>').text(message));
+            $('#git_save_toast_stack').append(toast);
+            window.setTimeout(function () {
+                toast.fadeOut(300, function () {
+                    toast.remove();
+                });
+            }, 3000);
+        }
 
         function formatLayoutTransitions(duration) {
             var enabled = $('#git\\.enabled').is(':checked');
@@ -94,18 +129,12 @@
             progress.addClass('fa fa-spinner fa-spin');
 
             saveFormToEndpoint(dataKey + '/set', 'frm_git', function () {
-                /* re-sync first, then hand the confirmation to the framework dialog */
+                /* re-sync first, then raise the floating confirmation */
                 mapDataToFormUI({'frm_git': dataKey + '/get'}).done(function () {
                     formatLayoutTransitions(0);
                     progress.removeClass('fa-spinner fa-spin');
                     button.prop('disabled', false);
-                    stdDialogInform(
-                        '{{ lang._("Git Backup") }}',
-                        '{{ lang._("Changes Applied Successfully!") }}',
-                        '{{ lang._("OK") }}',
-                        undefined,
-                        'success'
-                    );
+                    showSaveToast('{{ lang._("Changes Applied Successfully!") }}');
                 });
             }, false, function () {
                 /* validation rejected the payload: fields are marked, button must stay usable */
