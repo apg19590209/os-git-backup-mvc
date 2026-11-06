@@ -86,10 +86,31 @@
         });
 
         $('#btn_save').click(function () {
+            var button = $(this);
+            var progress = $('#save_progress');
+            var restoreHtml = button.html();
+
+            /* lock the button and spin its trailing icon while the endpoint is busy */
+            button.prop('disabled', true);
+            progress.addClass('fa fa-spinner fa-spin');
+
             saveFormToEndpoint(dataKey + '/set', 'frm_git', function () {
+                /* re-sync first, so the success state is applied after the layout rebuild */
                 mapDataToFormUI({'frm_git': dataKey + '/get'}).done(function () {
                     formatLayoutTransitions(0);
+                    var settledHtml = button.html();
+                    button.removeClass('btn-primary').addClass('btn-success').html(
+                        '<b><i class="fa fa-check"></i> {{ lang._("Changes Applied Successfully!") }}</b>'
+                    );
+                    setTimeout(function () {
+                        button.removeClass('btn-success').addClass('btn-primary')
+                            .html(settledHtml).prop('disabled', false);
+                    }, 2000);
                 });
+            }, false, function () {
+                /* validation rejected the payload: fields are marked, button must stay usable */
+                progress.removeClass('fa-spinner fa-spin');
+                button.html(restoreHtml).prop('disabled', false);
             });
         });
 
