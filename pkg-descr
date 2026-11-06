@@ -1,0 +1,3 @@
+This plugin provides an advanced MVC-compliant backup interface for OPNsense.
+It introduces an explicit 'Local-Only' version control repository tracking mode,
+a consolidated credentials layout, and an asynchronous connection tester utility.

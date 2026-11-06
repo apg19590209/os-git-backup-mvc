@@ -1,0 +1,3 @@
+@dir src/opnsense/mvc/app/controllers/OPNsense/GitBackup
+@dir src/opnsense/mvc/app/models/OPNsense/GitBackup
+@dir src/opnsense/mvc/app/views/OPNsense/GitBackup
