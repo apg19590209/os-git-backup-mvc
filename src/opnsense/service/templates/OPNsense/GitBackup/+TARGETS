@@ -1,0 +1,1 @@
+cron:/etc/cron.d/50-git-backup
