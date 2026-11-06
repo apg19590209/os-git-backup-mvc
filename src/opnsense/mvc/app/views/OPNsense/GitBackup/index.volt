@@ -69,14 +69,14 @@
             /* a new card replaces any older row, so repeated saves can never stack */
             $('#git_save_toast_stack').empty();
 
-            /* the shell is complete before the card is mounted, so it never fades in empty.
-               The only caller passes the translated "Changes Applied Successfully!" literal; if this
-               helper is ever called with dynamic text, escape it at the call site. */
-            var toastHtml = '<div class="alert alert-success git-custom-toast" role="status">' +
+            /* the shell is complete before the card is mounted, and the text is set on the
+               detached node so the card can never fade in empty or lose its payload */
+            var toast = $('<div class="alert alert-success git-custom-toast" role="status">' +
                             '<strong><i class="fa fa-check-circle"></i></strong> ' +
-                            '<span>' + message + '</span>' +
-                            '</div>';
-            var toast = $(toastHtml).appendTo('#git_save_toast_stack');
+                            '<span></span>' +
+                            '</div>');
+            toast.find('span').text(message);
+            toast.appendTo('#git_save_toast_stack');
             toast.fadeIn(200);
             window.setTimeout(function () {
                 toast.fadeOut(300, function () {
