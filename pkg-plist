@@ -1,3 +1,11 @@
-@dir src/opnsense/mvc/app/controllers/OPNsense/GitBackup
-@dir src/opnsense/mvc/app/models/OPNsense/GitBackup
-@dir src/opnsense/mvc/app/views/OPNsense/GitBackup
+usr/local/etc/rc.syshook.d/config/10-git-backup
+usr/local/opnsense/mvc/app/controllers/OPNsense/GitBackup/IndexController.php
+usr/local/opnsense/mvc/app/controllers/OPNsense/GitBackup/Api/SettingsController.php
+usr/local/opnsense/mvc/app/controllers/OPNsense/GitBackup/forms/settings.xml
+usr/local/opnsense/mvc/app/models/OPNsense/Backup/GitSettings.xml
+usr/local/opnsense/mvc/app/models/OPNsense/Backup/GitSettings.php
+usr/local/opnsense/mvc/app/models/OPNsense/GitBackup/ACL/ACL.xml
+usr/local/opnsense/mvc/app/models/OPNsense/GitBackup/Menu/Menu.xml
+usr/local/opnsense/mvc/app/views/OPNsense/GitBackup/index.volt
+usr/local/opnsense/version/git-backup
+usr/local/opnsense/mvc/app/library/OPNsense/Backup/Git.php
