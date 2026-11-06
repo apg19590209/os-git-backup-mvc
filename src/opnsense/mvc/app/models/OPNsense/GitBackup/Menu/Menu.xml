@@ -1,0 +1,7 @@
+<menu>
+   <System>
+      <Configuration>
+         <GitBackup order="20" VisibleName="Git Backup" cssClass="fa fa-code-fork fa-fw" url="/ui/gitbackup"/>
+      </Configuration>
+   </System>
+</menu>

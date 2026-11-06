@@ -1,0 +1,51 @@
+<form>
+    <field>
+        <id>git.enabled</id>
+        <label>Enable</label>
+        <type>checkbox</type>
+        <help><![CDATA[Enable the git based configuration backup provider.]]></help>
+    </field>
+    <field>
+        <id>git.dest_type</id>
+        <label>Destination Type</label>
+        <type>dropdown</type>
+        <help><![CDATA[Keep the configuration history locally, or push it to an upstream repository as well.]]></help>
+    </field>
+    <field>
+        <id>git.url</id>
+        <label>URL</label>
+        <type>text</type>
+        <help><![CDATA[Target location without credentials, for example ssh://server/project.git or https://server/project.git.]]></help>
+    </field>
+    <field>
+        <id>git.branch</id>
+        <label>Branch</label>
+        <type>text</type>
+        <help><![CDATA[Target branch to push to.]]></help>
+    </field>
+    <field>
+        <id>git.force_push</id>
+        <label>Force Push</label>
+        <type>checkbox</type>
+        <help><![CDATA[Force push to origin when the histories diverge. This overwrites the upstream branch.]]></help>
+    </field>
+    <field>
+        <id>git.user</id>
+        <label>User Name</label>
+        <type>text</type>
+        <help><![CDATA[User name for the upstream repository, use a token in the password field where supported.]]></help>
+    </field>
+    <field>
+        <id>git.password</id>
+        <label>Password</label>
+        <type>password</type>
+        <help><![CDATA[Password or personal access token for the upstream repository.]]></help>
+    </field>
+    <field>
+        <id>git.privkey</id>
+        <label>SSH private key</label>
+        <type>textbox</type>
+        <height>10</height>
+        <help><![CDATA[When provided, ssh based authentication is used with this key.]]></help>
+    </field>
+</form>

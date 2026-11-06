@@ -1,0 +1,10 @@
+<acl>
+   <page-system-gitbackup>
+      <name>System: Configuration: Git Backup</name>
+      <description>Allow access to the 'System: Configuration: Git Backup' page.</description>
+      <patterns>
+         <pattern>ui/gitbackup/*</pattern>
+         <pattern>api/gitbackup/settings/*</pattern>
+      </patterns>
+   </page-system-gitbackup>
+</acl>
