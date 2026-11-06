@@ -29,6 +29,7 @@
 namespace OPNsense\Backup;
 
 use OPNsense\Base\BaseModel;
+use OPNsense\Base\Messages\Message;
 
 /**
  * Class GitSettings
@@ -48,6 +49,36 @@ class GitSettings extends BaseModel
             $this->url->setConstraints([]);
             $this->user->setConstraints([]);
         }
-        return parent::performValidation($validateFullModel);
+
+        $validation = parent::performValidation($validateFullModel);
+
+        /*
+         * The xml DependConstraint on url/user only runs for nodes that changed in this request, so a
+         * save that merely switches the panel into remote mode would not be rejected. Re-check the
+         * pair explicitly and only add a message the constraint did not already report.
+         */
+        if ((string)$this->enabled === '1' && (string)$this->dest_type === 'remote') {
+            $required = [
+                'url' => gettext('A remote repository URL is required when upstream push is enabled.'),
+                'user' => gettext('A username or access token identifier is required for remote push.'),
+            ];
+            foreach ($required as $field => $message) {
+                if (trim((string)$this->getNodeByReference($field)) !== '') {
+                    continue;
+                }
+                $reported = false;
+                foreach ($validation as $existing) {
+                    if ($existing->getField() === $field) {
+                        $reported = true;
+                        break;
+                    }
+                }
+                if (!$reported) {
+                    $validation->appendMessage(new Message($message, $field));
+                }
+            }
+        }
+
+        return $validation;
     }
 }
