@@ -30,6 +30,7 @@ namespace OPNsense\GitBackup\Api;
 
 use OPNsense\Base\ApiControllerBase;
 use OPNsense\Backup\GitSettings;
+use OPNsense\Core\Backend;
 use OPNsense\Core\Config;
 
 /**
@@ -110,5 +111,42 @@ class SettingsController extends ApiControllerBase
         } catch (\Throwable $e) {
             return ['status' => 'error', 'message' => $e->getMessage()];
         }
+    }
+
+    /**
+     * apply the stored settings: re-render the plugin template so the scheduled job matches the
+     * saved configuration and, when the provider is enabled, record a snapshot straight away.
+     * This is the endpoint behind the core apply bar; it answers with the status/status_msg pair
+     * the SimpleActionButton widget expects.
+     *
+     * @return array
+     */
+    public function reconfigureAction()
+    {
+        if (!$this->request->isPost()) {
+            return ['status' => 'failed', 'status_msg' => gettext('Invalid request method.')];
+        }
+
+        $backend = new Backend();
+
+        $template = trim((string)$backend->configdRun('template reload OPNsense/GitBackup'));
+        if ($template === '') {
+            return [
+                'status' => 'failed',
+                'status_msg' => gettext('Could not refresh the scheduled job definition.'),
+            ];
+        }
+
+        if ((string)(new GitSettings())->enabled === '1') {
+            $snapshot = trim((string)$backend->configdRun('gitbackup sync'));
+            if ($snapshot === '') {
+                return [
+                    'status' => 'failed',
+                    'status_msg' => gettext('Could not record the configuration snapshot.'),
+                ];
+            }
+        }
+
+        return ['status' => 'ok'];
     }
 }

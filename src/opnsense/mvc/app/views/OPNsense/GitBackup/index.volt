@@ -1,3 +1,4 @@
+{{ partial('layout_partials/base_apply_button', {'data_endpoint': '/api/gitbackup/settings/reconfigure', 'button_id': 'btn_apply', 'data_label': 'Apply Changes'}) }}
 <form id="frm_git" class="form-inline">
 
     <!-- always visible core options -->
@@ -43,6 +44,9 @@
 <script>
     $(document).ready(function () {
         var dataKey = '/api/gitbackup/settings';
+
+        /* core action button: Apply bar bound to the plugin reconfigure endpoint */
+        $('#btn_apply').SimpleActionButton();
 
         function formatLayoutTransitions(duration) {
             var enabled = $('#git\\.enabled').is(':checked');
@@ -111,13 +115,8 @@
                 /* re-sync first, then hand the confirmation to the native framework dialog */
                 mapDataToFormUI({'frm_git': dataKey + '/get'}).done(function () {
                     formatLayoutTransitions(0);
-                    stdDialogInform(
-                        '{{ lang._("Git Backup") }}',
-                        '{{ lang._("Changes Applied Successfully!") }}',
-                        '{{ lang._("OK") }}',
-                        undefined,
-                        'success'
-                    );
+                    /* let the core apply bar take over: it shows the success checkmark and can apply */
+                    $(document).trigger('settings-changed');
                 }).always(function () {
                     /*
                      * the lock is released only once the whole save track is finished, and
