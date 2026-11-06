@@ -66,17 +66,22 @@
 
         /* minimal floating confirmation, replaces the modal dialog used earlier */
         function showSaveToast(message) {
-            /* the card is built and mounted first, then slid into view fully formed;
-               the message is inserted as text so a translation can never inject markup */
-            var toast = $('<div class="alert alert-success git-custom-toast" role="status"></div>');
-            toast.append($('<strong></strong>').append($('<i class="fa fa-check-circle"></i>')));
-            toast.append(document.createTextNode(' '));
-            toast.append($('<span></span>').text(message));
+            /* a new card replaces any older row, so repeated saves can never stack */
+            $('#git_save_toast_stack').empty();
+
+            /* the shell is complete and the text is baked in before the card is mounted;
+               the message goes in as text so a translation can never inject markup */
+            var toastHtml = '<div class="alert alert-success git-custom-toast" role="status">' +
+                            '<strong><i class="fa fa-check-circle"></i></strong> ' +
+                            '<span></span>' +
+                            '</div>';
+            var toast = $(toastHtml);
+            toast.find('span').text(message);
             toast.appendTo('#git_save_toast_stack');
-            toast.fadeIn(300);
+            toast.fadeIn(200);
             window.setTimeout(function () {
                 toast.fadeOut(300, function () {
-                    toast.remove();
+                    $(this).remove();
                 });
             }, 3000);
         }
