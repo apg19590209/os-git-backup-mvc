@@ -122,7 +122,21 @@
             formatLayoutTransitions(200);
         });
 
+        /*
+         * in-flight gate for the save track. The disabled attribute stops the browser from
+         * dispatching further clicks, but a second event already queued for the same tick
+         * (rapid double click, programmatic trigger) is short-circuited here before it can
+         * touch the DOM or the API. Every release path below clears the flag.
+         */
+        let isSaving = false;
+
         $('#btn_save').click(function () {
+            if (isSaving) {
+                /* instantly kill any rapid-fire event before it reaches the DOM or the API */
+                return;
+            }
+            isSaving = true;
+
             var button = $(this);
             var progress = $('#save_progress');
 
@@ -143,11 +157,13 @@
                      */
                     progress.removeClass('fa-spinner fa-spin');
                     button.prop('disabled', false);
+                    isSaving = false;
                 });
             }, false, function () {
                 /* validation rejected the payload: fields are marked, button must stay usable */
                 progress.removeClass('fa-spinner fa-spin');
                 button.prop('disabled', false);
+                isSaving = false;
             });
         });
 
